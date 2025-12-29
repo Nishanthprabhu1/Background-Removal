@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Background Remover</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 50px 20px;
+            color: #333;
+        }
+
+        h1 { margin-bottom: 20px; }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .upload-btn-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            border: 2px solid #007bff;
+            color: white;
+            background-color: #007bff;
+            padding: 10px 25px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn:hover { background-color: #0056b3; }
+
+        .upload-btn-wrapper input[type=file] {
+            font-size: 100px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        #status {
+            margin: 15px 0;
+            font-weight: 500;
+            color: #666;
+            min-height: 24px;
+        }
+
+        .image-area {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .img-box {
+            flex: 1;
+            min-width: 200px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            background: #fafafa;
+        }
+
+        .img-box h3 { margin: 0 0 10px 0; font-size: 14px; color: #555; }
+        
+        img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            display: block;
+        }
+
+        /* Download button styling */
+        #downloadBtn {
+            display: none; /* Hidden by default */
+            margin-top: 15px;
+            background-color: #28a745;
+            border-color: #28a745;
+            text-decoration: none;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Background Remover</h1>
+    <p>Upload an image to remove the background instantly in your browser.</p>
+
+    <div class="upload-btn-wrapper">
+        <button class="btn">Select Image</button>
+        <input type="file" id="fileInput" accept="image/*" />
+    </div>
+
+    <div id="status">Waiting for image...</div>
+
+    <div class="image-area">
+        <div class="img-box" id="originalBox" style="display:none;">
+            <h3>Original</h3>
+            <img id="originalImg" src="" alt="Original">
+        </div>
+        <div class="img-box" id="resultBox" style="display:none;">
+            <h3>Result</h3>
+            <img id="processedImg" src="" alt="Processed">
+        </div>
+    </div>
+    
+    <a id="downloadBtn" class="btn" href="#" download="removed-bg.png" style="display: none; margin-top: 20px;">Download Image</a>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.3.0/dist/imgly-background-removal.min.js"></script>
+
+<script>
+    const fileInput = document.getElementById('fileInput');
+    const statusText = document.getElementById('status');
+    const originalImg = document.getElementById('originalImg');
+    const processedImg = document.getElementById('processedImg');
+    const originalBox = document.getElementById('originalBox');
+    const resultBox = document.getElementById('resultBox');
+    const downloadBtn = document.getElementById('downloadBtn');
+
+    fileInput.addEventListener('change', async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        // Reset UI
+        statusText.innerText = "Loading AI model and processing... (First time takes longer)";
+        downloadBtn.style.display = 'none';
+        
+        // Show original image
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            originalImg.src = e.target.result;
+            originalBox.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+
+        try {
+            // CALL THE AI LIBRARY
+            // imglyRemoveBackground is available globally from the script tag
+            const blob = await imglyRemoveBackground(file);
+
+            // Convert result blob to URL
+            const url = URL.createObjectURL(blob);
+            processedImg.src = url;
+            resultBox.style.display = 'block';
+            statusText.innerText = "Done!";
+
+            // Setup download button
+            downloadBtn.href = url;
+            downloadBtn.style.display = 'inline-block';
+
+        } catch (error) {
+            console.error(error);
+            statusText.innerText = "Error processing image. Check console for details.";
+        }
+    });
+</script>
+
+</body>
+</html>
