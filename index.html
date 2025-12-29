@@ -128,9 +128,10 @@
     <a id="downloadBtn" href="#" download="removed-bg.png">Download Image</a>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.3.0/dist/imgly-background-removal.min.js"></script>
+<script type="module">
+    // Import the library directly. This guarantees it is loaded before running.
+    import imglyRemoveBackground from "https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.3.0/+esm";
 
-<script>
     const fileInput = document.getElementById('fileInput');
     const statusText = document.getElementById('status');
     const originalImg = document.getElementById('originalImg');
@@ -156,13 +157,15 @@
         reader.readAsDataURL(file);
 
         try {
-            // CONFIG: Point to public CDN for model assets
-            // This is crucial for GitHub Pages to find the AI files
+            // Configuration for the AI
             const config = {
-                publicPath: "https://static.img.ly/lib/background-removal/1.3.0/"
+                progress: (key, current, total) => {
+                    const percent = Math.round((current / total) * 100);
+                    statusText.innerText = `Processing: ${percent}%`;
+                }
             };
 
-            // Run the background removal with our config
+            // Run the background removal
             const blob = await imglyRemoveBackground(file, config);
 
             // Display Result
